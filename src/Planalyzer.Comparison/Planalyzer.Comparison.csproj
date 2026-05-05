@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Planalyzer.Comparison</AssemblyName>
+    <RootNamespace>Planalyzer.Comparison</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
+  </ItemGroup>
+</Project>

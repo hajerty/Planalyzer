@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-16"?>
+<ShowPlanXML xmlns="http://schemas.microsoft.com/sqlserver/2004/07/showplan" Version="1.564" Build="16.0.4150.1">
+  <BatchSequence>
+    <Batch>
+      <Statements>
+        <StmtSimple StatementText="SELECT o.* FROM dbo.Orders o WHERE YEAR(o.OrderDate) = 2025;"
+                    StatementType="SELECT" QueryHash="0xAB12" QueryPlanHash="0x77AA"
+                    StatementSubTreeCost="3.42" StatementEstRows="12345"
+                    CardinalityEstimationModelVersion="160" StatementOptmLevel="FULL">
+          <QueryPlan>
+            <RelOp NodeId="0" PhysicalOp="Clustered Index Scan" LogicalOp="Clustered Index Scan"
+                   EstimateRows="12345" EstimateIO="2.1" EstimateCPU="0.4"
+                   EstimatedTotalSubtreeCost="3.42" EstimatedRowsRead="1000000" Parallel="true">
+              <OutputList>
+                <ColumnReference Database="db" Schema="dbo" Table="Orders" Column="Id"/>
+                <ColumnReference Database="db" Schema="dbo" Table="Orders" Column="OrderDate"/>
+              </OutputList>
+              <IndexScan Ordered="false">
+                <Object Database="db" Schema="dbo" Table="Orders" Index="PK_Orders" IndexKind="Clustered"/>
+                <Predicate>
+                  <ScalarOperator ScalarString="datepart(year,[db].[dbo].[Orders].[OrderDate])=(2025)"/>
+                </Predicate>
+              </IndexScan>
+            </RelOp>
+          </QueryPlan>
+        </StmtSimple>
+      </Statements>
+    </Batch>
+  </BatchSequence>
+</ShowPlanXML>

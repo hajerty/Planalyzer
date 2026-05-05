@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Planalyzer.Execution</AssemblyName>
+    <RootNamespace>Planalyzer.Execution</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
+    <ProjectReference Include="..\Planalyzer.Comparison\Planalyzer.Comparison.csproj" />
+  </ItemGroup>
+</Project>

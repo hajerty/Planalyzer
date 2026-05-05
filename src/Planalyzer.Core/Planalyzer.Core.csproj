@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Planalyzer.Core</AssemblyName>
+    <RootNamespace>Planalyzer.Core</RootNamespace>
+  </PropertyGroup>
+</Project>
