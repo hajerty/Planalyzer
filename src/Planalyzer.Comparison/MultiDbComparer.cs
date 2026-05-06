@@ -99,7 +99,7 @@ public static class MultiDbComparer
                 $"{sample.Title} — {sample.Recommendation}",
                 g.Max(x => x.F.Severity),
                 distinctLabels);
-            if (distinctLabels >= Math.Ceiling(total / 2.0))
+            if (distinctLabels * 2 > total)
                 common.Add(rec);
             else
                 divergent.Add(rec);

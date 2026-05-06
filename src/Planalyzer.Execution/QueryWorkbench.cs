@@ -7,7 +7,7 @@ namespace Planalyzer.Execution;
 /// invocation of TryRun creates a new revision row tied to a logical "slug",
 /// and the user can list, diff and rollback.
 /// </summary>
-public sealed class QueryWorkbench
+public sealed class QueryWorkbench : IDisposable
 {
     private readonly SqlPlanRunner _runner;
     private readonly QueryHistoryStore _store;

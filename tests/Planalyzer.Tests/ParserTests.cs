@@ -76,6 +76,61 @@ public class ParserTests
         Assert.Contains("Top operatori per costo", text);
     }
 
+    private const string NestedJoinPlan = """
+<ShowPlanXML xmlns="http://schemas.microsoft.com/sqlserver/2004/07/showplan" Version="1.564" Build="16.0">
+  <BatchSequence><Batch><Statements>
+    <StmtSimple StatementText="x" QueryHash="0xH" QueryPlanHash="0xP"
+                StatementSubTreeCost="2" StatementEstRows="100">
+      <QueryPlan>
+        <RelOp NodeId="0" PhysicalOp="Hash Match" LogicalOp="Inner Join"
+               EstimateRows="100" EstimatedTotalSubtreeCost="2"
+               EstimateCPU="0.1" EstimateIO="0.1" Parallel="false">
+          <OutputList/>
+          <Hash>
+            <DefinedValues/>
+            <HashKeysBuild><ColumnReference Column="A"/></HashKeysBuild>
+            <HashKeysProbe><ColumnReference Column="A"/></HashKeysProbe>
+            <RelOp NodeId="1" PhysicalOp="Index Scan" LogicalOp="Index Scan"
+                   EstimateRows="50" EstimatedTotalSubtreeCost="1"
+                   EstimateCPU="0.05" EstimateIO="0.05" Parallel="false">
+              <OutputList/>
+              <IndexScan>
+                <Object Database="db" Schema="dbo" Table="L" Index="IX_L"/>
+              </IndexScan>
+            </RelOp>
+            <RelOp NodeId="2" PhysicalOp="Index Scan" LogicalOp="Index Scan"
+                   EstimateRows="50" EstimatedTotalSubtreeCost="1"
+                   EstimateCPU="0.05" EstimateIO="0.05" Parallel="false">
+              <OutputList/>
+              <IndexScan>
+                <Object Database="db" Schema="dbo" Table="R" Index="IX_R"/>
+              </IndexScan>
+            </RelOp>
+          </Hash>
+        </RelOp>
+      </QueryPlan>
+    </StmtSimple>
+  </Statements></Batch></BatchSequence>
+</ShowPlanXML>
+""";
+
+    [Fact]
+    public void Parses_child_relops_nested_inside_wrapper()
+    {
+        // Showplan stores child RelOps inside the operator wrapper element (Hash, NestedLoops, ...).
+        // The parser must recover them as Children, not skip them.
+        var p = ShowplanParser.ParseString(NestedJoinPlan);
+        var root = p.Statements.Single().Root!;
+        Assert.Equal("Hash Match", root.PhysicalOp);
+        Assert.Equal(2, root.Children.Count);
+        Assert.All(root.Children, c => Assert.Equal("Index Scan", c.PhysicalOp));
+        // Promoted property: HashKeysBuild lifted to top level on the parent RelOp.
+        Assert.True(root.Properties.ContainsKey("HashKeysBuild"));
+        // Each leaf carries its Object via descent through IndexScan wrapper.
+        Assert.Single(root.Children[0].Objects);
+        Assert.Single(root.Children[1].Objects);
+    }
+
     [Fact]
     public void Expert_level_dumps_full_properties()
     {

@@ -150,20 +150,63 @@ public static class ShowplanParser
         foreach (var a in relOp.Attributes())
             op.Properties[a.Name.LocalName] = a.Value;
 
-        // Capture every immediate child element except RelOp & RunTimeInformation & Warnings & OutputList & Object[]
-        // into Properties as a serialized snippet — this preserves residual predicates,
-        // hash keys, probe residuals, scalar definitions, etc.
-        foreach (var child in relOp.Elements())
+        // Showplan structure: child RelOps are nested inside the operator-specific
+        // wrapper element (Hash, NestedLoops, ComputeScalar, IndexScan, Filter, ...).
+        // 1) Add direct child operators = descendant RelOps whose nearest RelOp ancestor
+        //    is the current relOp (i.e., not deeper than one operator boundary away).
+        var directChildren = relOp.Descendants(Ns + "RelOp")
+            .Where(d => d.Ancestors(Ns + "RelOp").FirstOrDefault() == relOp)
+            .ToList();
+        foreach (var c in directChildren)
+            op.Children.Add(ParseOperator(c, op));
+
+        // 2) Walk every element within the current operator's "scope" — i.e.
+        //    everything inside the wrapper elements but stopping at any nested RelOp.
+        //    For well-known elements (Predicate, ResidualPredicate, HashKeysBuild,
+        //    ProbeResidual, DefinedValues, OuterReferences, ...) we promote them to
+        //    top-level keys in op.Properties so the analyzer can find them easily.
+        //    Other elements are also captured as serialized snippets — nothing is
+        //    hidden / truncated, which is the point of the tool.
+        WalkScoped(relOp, op);
+
+        if (op.RuntimeInfo.Count > 0)
         {
+            op.ActualRows = op.RuntimeInfo.Sum(r => r.ActualRows);
+            op.ActualRowsRead = op.RuntimeInfo.Sum(r => r.ActualRowsRead);
+            op.ActualExecutions = op.RuntimeInfo.Sum(r => r.ActualExecutions);
+        }
+        return op;
+    }
+
+    private static readonly HashSet<string> PromotedKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Predicate", "ResidualPredicate", "ProbeResidual",
+        "HashKeysBuild", "HashKeysProbe",
+        "DefinedValues", "OuterReferences",
+        "GroupBy", "OrderBy",
+        "SeekPredicates", "SeekPredicateNew", "SeekPredicate",
+        "Where",
+    };
+
+    /// <summary>
+    /// Walks every element inside this operator's scope (= descendants up to but not
+    /// including any nested RelOp). Captures well-known sub-elements as top-level
+    /// properties; other wrapper elements get a serialized snippet AND we keep
+    /// recursing into them to find well-known children.
+    /// </summary>
+    private static void WalkScoped(XElement scope, PlanOperator op)
+    {
+        foreach (var child in scope.Elements())
+        {
+            // Hard boundary: never cross into another operator's subtree.
+            if (child.Name == Ns + "RelOp") continue;
+
             switch (child.Name.LocalName)
             {
-                case "RelOp":
-                    op.Children.Add(ParseOperator(child, op));
-                    break;
                 case "OutputList":
                     foreach (var c in child.Elements(Ns + "ColumnReference"))
                         op.OutputColumns.Add(FormatColumn(c));
-                    op.Properties[$"OutputList"] = string.Join(", ", op.OutputColumns);
+                    op.Properties["OutputList"] = string.Join(", ", op.OutputColumns);
                     break;
                 case "Warnings":
                     foreach (var w in child.Elements())
@@ -172,29 +215,34 @@ public static class ShowplanParser
                 case "RunTimeInformation":
                     foreach (var t in child.Elements(Ns + "RunTimeCountersPerThread"))
                         op.RuntimeInfo.Add(ParseRuntime(t));
-                    if (op.RuntimeInfo.Count > 0)
-                    {
-                        op.ActualRows = op.RuntimeInfo.Sum(r => r.ActualRows);
-                        op.ActualRowsRead = op.RuntimeInfo.Sum(r => r.ActualRowsRead);
-                        op.ActualExecutions = op.RuntimeInfo.Sum(r => r.ActualExecutions);
-                    }
                     break;
                 case "Object":
                     op.Objects.Add(ParseObject(child));
                     break;
                 default:
-                    // Capture inner XML as text for the detail view, e.g.
-                    // <ScalarOperator ScalarString="..."/> trees.
+                    // Generic capture (no truncation).
                     var snippet = SerializeForProperty(child);
                     var key = child.Name.LocalName;
-                    if (op.Properties.ContainsKey(key))
-                        op.Properties[key] = op.Properties[key] + " | " + snippet;
+                    if (op.Properties.TryGetValue(key, out var existing))
+                        op.Properties[key] = existing + " | " + snippet;
                     else
                         op.Properties[key] = snippet;
+
+                    // Promote well-known elements so analyzer can find them with a
+                    // simple TryGetValue (regardless of which wrapper hosted them).
+                    if (PromotedKeys.Contains(key))
+                    {
+                        // Already stored above under its own name.
+                    }
+                    else
+                    {
+                        // Recurse into wrapper to surface its known children
+                        // (e.g. IndexScan -> Predicate, Hash -> HashKeysBuild...).
+                        WalkScoped(child, op);
+                    }
                     break;
             }
         }
-        return op;
     }
 
     private static string SerializeForProperty(XElement e)

@@ -1,0 +1,150 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="Planalyzer.Gui.Views.MainWindow"
+        Title="Planalyzer — SQL Plan Analyzer"
+        Width="1200" Height="820" MinWidth="900" MinHeight="600">
+    <DockPanel>
+        <Border DockPanel.Dock="Top" Background="#202830" Padding="14,10">
+            <StackPanel Orientation="Horizontal" Spacing="14">
+                <TextBlock Text="Planalyzer" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="analizzatore piani esecuzione SQL Server" Foreground="#B0BAC4" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+        <TabControl Margin="6">
+            <!-- =================== ANALYZE =================== -->
+            <TabItem Header="Analizza piano">
+                <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*">
+                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="AnalyzePickButton" Content="Apri file .sqlplan…"/>
+                        <TextBlock Name="AnalyzeFileLabel" VerticalAlignment="Center"
+                                   Text="(nessun file selezionato)" Foreground="#666"/>
+                        <ComboBox Name="AnalyzeLevelCombo" SelectedIndex="0" Width="160">
+                            <ComboBoxItem>Beginner</ComboBoxItem>
+                            <ComboBoxItem>Expert</ComboBoxItem>
+                        </ComboBox>
+                        <Button Name="AnalyzeRunButton" Content="Analizza" Background="#316FA8" Foreground="White"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Margin="6"
+                               Text="Carica uno o più .sqlplan; il tab mostra sintesi + finding e (in modalità Expert) il dump completo delle proprietà di ogni operatore."
+                               TextWrapping="Wrap" Foreground="#666"/>
+                    <TextBox Grid.Row="2" Name="AnalyzeOutput"
+                             AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="12"
+                             VerticalContentAlignment="Top"
+                             TextWrapping="NoWrap"/>
+                </Grid>
+            </TabItem>
+
+            <!-- =================== COMPARE =================== -->
+            <TabItem Header="Stimato vs Effettivo">
+                <Grid RowDefinitions="Auto,Auto,Auto,*">
+                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="CmpEstButton" Content="Apri piano stimato…"/>
+                        <TextBlock Name="CmpEstLabel" VerticalAlignment="Center"
+                                   Text="(stimato)" Foreground="#666"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="CmpActButton" Content="Apri piano effettivo…"/>
+                        <TextBlock Name="CmpActLabel" VerticalAlignment="Center"
+                                   Text="(effettivo)" Foreground="#666"/>
+                    </StackPanel>
+                    <Button Grid.Row="2" Name="CmpRunButton" Content="Confronta"
+                            Margin="6" HorizontalAlignment="Left"
+                            Background="#316FA8" Foreground="White"/>
+                    <TextBox Grid.Row="3" Name="CmpOutput"
+                             AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="12"
+                             TextWrapping="NoWrap"/>
+                </Grid>
+            </TabItem>
+
+            <!-- =================== MULTI-DB =================== -->
+            <TabItem Header="Multi-DB (stessa query)">
+                <Grid RowDefinitions="Auto,Auto,*,Auto,*" ColumnDefinitions="*">
+                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="MdAddButton" Content="Aggiungi piano…"/>
+                        <Button Name="MdClearButton" Content="Pulisci elenco"/>
+                        <Button Name="MdRunButton" Content="Confronta" Background="#316FA8" Foreground="White"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Margin="6" Foreground="#666"
+                               Text="Aggiungi più piani della stessa query da DB diversi (label = nome DB/ambiente). Lo strumento sintetizza le raccomandazioni che valgono per tutti."/>
+                    <DataGrid Grid.Row="2" Name="MdGrid"
+                              IsReadOnly="False" AutoGenerateColumns="False"
+                              CanUserResizeColumns="True" GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Label" Binding="{Binding Label}" Width="180"/>
+                            <DataGridTextColumn Header="File"  Binding="{Binding Path}"  Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <GridSplitter Grid.Row="3" Height="4" Background="#CCC"/>
+                    <TextBox Grid.Row="4" Name="MdOutput"
+                             AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="12"
+                             TextWrapping="NoWrap"/>
+                </Grid>
+            </TabItem>
+
+            <!-- =================== LIVE =================== -->
+            <TabItem Header="Esegui query (live + history)">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,*" ColumnDefinitions="2*,*">
+                    <StackPanel Orientation="Horizontal" Margin="6" Spacing="6"
+                                Grid.ColumnSpan="2">
+                        <TextBlock Text="Connection string:" VerticalAlignment="Center"/>
+                        <TextBox Name="LiveConn" Width="520"
+                                 Watermark="Server=.;Database=...;Trusted_Connection=True;TrustServerCertificate=True"/>
+                        <TextBlock Text="History DB:" VerticalAlignment="Center"/>
+                        <TextBox Name="LiveHistoryDb" Text="planalyzer.db" Width="200"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6" Spacing="6"
+                                Grid.ColumnSpan="2">
+                        <TextBlock Text="Slug query:" VerticalAlignment="Center"/>
+                        <TextBox Name="LiveSlug" Width="240" Watermark="es. orders-by-date"/>
+                        <TextBlock Text="Modalità:" VerticalAlignment="Center"/>
+                        <ComboBox Name="LiveMode" SelectedIndex="0" Width="160">
+                            <ComboBoxItem>Actual (esegue)</ComboBoxItem>
+                            <ComboBoxItem>Estimated</ComboBoxItem>
+                        </ComboBox>
+                        <TextBlock Text="Note:" VerticalAlignment="Center"/>
+                        <TextBox Name="LiveNote" Width="280" Watermark="commento revisione"/>
+                    </StackPanel>
+                    <TextBlock Grid.Row="2" Grid.Column="0" Margin="6,0" Text="SQL"/>
+                    <TextBlock Grid.Row="2" Grid.Column="1" Margin="6,0" Text="History"/>
+                    <TextBox Grid.Row="3" Grid.Column="0" Grid.RowSpan="2"
+                             Name="LiveSql" Margin="6"
+                             AcceptsReturn="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="13"
+                             TextWrapping="NoWrap"
+                             Watermark="-- digita qui la query"/>
+                    <DataGrid Grid.Row="3" Grid.Column="1" Grid.RowSpan="2"
+                              Margin="6" Name="LiveHistoryGrid"
+                              IsReadOnly="True" AutoGenerateColumns="False"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Rev" Binding="{Binding RevisionNo}" Width="50"/>
+                            <DataGridTextColumn Header="When"
+                                                Binding="{Binding CreatedAtUtc, StringFormat=yyyy-MM-dd HH:mm}"
+                                                Width="130"/>
+                            <DataGridTextColumn Header="Dur(ms)" Binding="{Binding DurationMs}" Width="80"/>
+                            <DataGridTextColumn Header="LRead"   Binding="{Binding LogicalReads}" Width="80"/>
+                            <DataGridTextColumn Header="Rows"    Binding="{Binding RowCount}" Width="80"/>
+                            <DataGridTextColumn Header="Note"    Binding="{Binding Note}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <StackPanel Grid.Row="5" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="LiveRunButton" Content="Esegui + analizza" Background="#316FA8" Foreground="White"/>
+                        <Button Name="LiveRefreshHistoryButton" Content="Aggiorna history"/>
+                        <Button Name="LiveLoadRevisionButton" Content="Carica SQL della revisione selezionata"/>
+                        <Button Name="LiveRollbackButton" Content="Rollback alla revisione selezionata"/>
+                    </StackPanel>
+                    <TextBox Grid.Row="6" Grid.ColumnSpan="2" Name="LiveOutput"
+                             AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="12"
+                             TextWrapping="NoWrap"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

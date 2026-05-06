@@ -128,6 +128,31 @@ Il rollback **non sovrascrive** la storia: crea una nuova revisione con il SQL
 della revisione di destinazione e una nota; le statistiche di esecuzione
 torneranno al successivo `planalyzer run`.
 
+## Interfaccia grafica (Avalonia)
+
+Oltre alla CLI è disponibile una GUI cross-platform basata su **Avalonia 11**
+(gira su Windows, Linux, macOS).
+
+```bash
+dotnet run --project src/Planalyzer.Gui
+```
+
+Quattro tab:
+
+1. **Analizza piano** — file picker per uno o più .sqlplan, scelta livello
+   beginner/expert, output testuale identico al CLI.
+2. **Stimato vs Effettivo** — due picker, output del confronto.
+3. **Multi-DB** — DataGrid in cui aggiungi piani con label, esegue la sintesi.
+4. **Esegui query (live + history)** — connection string, slug, editor SQL,
+   DataGrid con la storia delle revisioni; bottoni *Esegui+analizza*,
+   *Carica SQL della revisione*, *Rollback alla revisione selezionata*.
+
+## .NET cross-platform
+
+Il progetto è già `net8.0`, ovvero il successore unificato di .NET Core
+(da .NET 5 in poi il brand "Core" è stato dismesso). Gira nativamente su
+Windows, Linux e macOS — sia la CLI sia la GUI Avalonia.
+
 ## Architettura
 
 ```
@@ -144,6 +169,7 @@ Planalyzer.Execution
   ├─ QueryHistoryStore.cs   storage SQLite delle revisioni
   └─ QueryWorkbench.cs      facade run/list/rollback
 Planalyzer.Cli              entry point CLI con subcommand
+Planalyzer.Gui              GUI Avalonia 11 (cross-platform)
 tests/Planalyzer.Tests      xUnit
 ```
 
