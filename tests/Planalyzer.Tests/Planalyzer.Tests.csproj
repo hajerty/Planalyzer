@@ -10,5 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Planalyzer.Core\Planalyzer.Core.csproj" />
     <ProjectReference Include="..\..\src\Planalyzer.Comparison\Planalyzer.Comparison.csproj" />
+    <ProjectReference Include="..\..\src\Planalyzer.Validation\Planalyzer.Validation.csproj" />
   </ItemGroup>
 </Project>
