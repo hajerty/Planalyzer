@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"/>
+  <title>Planalyzer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="/css/app.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <h1>Planalyzer</h1>
+    <span class="subtitle">SQL Server query &amp; plan analyzer</span>
+    <span class="health" id="health" title="stato servizio">&middot;</span>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" id="tabs" role="tablist">
+      <button class="tab active" role="tab" data-tab="certify">Certifica query</button>
+      <button class="tab" role="tab" data-tab="analyze">Analizza piano</button>
+      <button class="tab" role="tab" data-tab="compare">Stimato vs Effettivo</button>
+      <button class="tab" role="tab" data-tab="multidb">Multi-DB</button>
+      <button class="tab" role="tab" data-tab="run">Esegui &amp; history</button>
+    </nav>
+
+    <main class="content">
+      <div id="globalError" class="alert" role="alert" hidden></div>
+
+      <!-- ===================== TAB: CERTIFY ===================== -->
+      <section class="panel" data-panel="certify">
+        <h2>Certifica query</h2>
+        <p class="muted">Valida lo statement contro le convenzioni interne (VR.001..VR.034).</p>
+
+        <label class="field">
+          <span>SQL</span>
+          <textarea id="certifySql" rows="14" spellcheck="false" placeholder="SELECT ... FROM dbo.Orders o ..."></textarea>
+        </label>
+
+        <details class="options">
+          <summary>Opzioni di validazione</summary>
+          <div class="grid">
+            <label>maxOutputColumns
+              <input type="number" id="opt-maxOutputColumns" min="1" placeholder="30"/>
+            </label>
+            <label>maxJoinedTables
+              <input type="number" id="opt-maxJoinedTables" min="1" placeholder="7"/>
+            </label>
+            <label>maxDerivedColumns
+              <input type="number" id="opt-maxDerivedColumns" min="1" placeholder="8"/>
+            </label>
+            <label>maxEstimatedRows
+              <input type="number" id="opt-maxEstimatedRows" min="1" placeholder="100000"/>
+            </label>
+            <label>maxTablesWithoutAlias
+              <input type="number" id="opt-maxTablesWithoutAlias" min="0" placeholder="1"/>
+            </label>
+            <label>maxStatementLines
+              <input type="number" id="opt-maxStatementLines" min="1" placeholder="200"/>
+            </label>
+          </div>
+          <fieldset class="rules">
+            <legend>Regole disabilitate</legend>
+            <div id="ruleList" class="rule-list">caricamento&hellip;</div>
+          </fieldset>
+        </details>
+
+        <div class="actions">
+          <button id="btnValidate" class="primary">Valida</button>
+          <button id="btnValidateClear" class="ghost">Pulisci</button>
+        </div>
+
+        <div id="validateOutput" class="output" hidden>
+          <div class="cert-summary">
+            <div class="score-box">
+              <div class="score" id="vScore">--</div>
+              <div class="score-label">Score</div>
+            </div>
+            <div class="cert-badge" id="vBadge">--</div>
+            <div class="counts" id="vCounts"></div>
+          </div>
+
+          <h3>Findings</h3>
+          <div class="table-wrap">
+            <table class="findings">
+              <thead>
+                <tr><th>Sev</th><th>Regola</th><th>L:C</th><th>Fonte</th><th>Messaggio</th><th>Snippet / Fix</th></tr>
+              </thead>
+              <tbody id="vFindings"></tbody>
+            </table>
+          </div>
+
+          <div class="legend">
+            <strong>Fonti:</strong>
+            <span><code>HK</code> Hugo Kornelis</span>
+            <span><code>PD</code> Pinal Dave</span>
+            <span><code>BP</code> Best practice</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TAB: ANALYZE ===================== -->
+      <section class="panel" data-panel="analyze" hidden>
+        <h2>Analizza piano d'esecuzione</h2>
+        <p class="muted">Carica un file <code>.sqlplan</code> o <code>.xml</code> e ottieni l'analisi testuale.</p>
+
+        <div class="row">
+          <label class="field">
+            <span>File piano</span>
+            <input type="file" id="analyzeFile" accept=".sqlplan,.xml,text/xml"/>
+          </label>
+          <label class="field">
+            <span>Livello</span>
+            <select id="analyzeLevel">
+              <option value="beginner">Beginner</option>
+              <option value="expert">Expert</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button id="btnAnalyze" class="primary">Analizza</button>
+          </div>
+        </div>
+
+        <div id="analyzeOutput" class="output" hidden>
+          <h3>Output</h3>
+          <pre id="analyzeText" class="code"></pre>
+          <h3>Statement</h3>
+          <div id="analyzeStatements"></div>
+        </div>
+      </section>
+
+      <!-- ===================== TAB: COMPARE ===================== -->
+      <section class="panel" data-panel="compare" hidden>
+        <h2>Stimato vs Effettivo</h2>
+        <p class="muted">Confronta due piani per evidenziare lo skew tra righe stimate ed effettive.</p>
+
+        <div class="row">
+          <label class="field">
+            <span>Piano stimato</span>
+            <input type="file" id="estimatedFile" accept=".sqlplan,.xml,text/xml"/>
+          </label>
+          <label class="field">
+            <span>Piano effettivo</span>
+            <input type="file" id="actualFile" accept=".sqlplan,.xml,text/xml"/>
+          </label>
+          <div class="actions">
+            <button id="btnCompare" class="primary">Confronta</button>
+          </div>
+        </div>
+
+        <div id="compareOutput" class="output" hidden>
+          <h3>Sintesi</h3>
+          <pre id="compareText" class="code"></pre>
+          <h3>Diff per nodo</h3>
+          <div class="table-wrap">
+            <table class="diff">
+              <thead><tr><th>Nodo</th><th>Stimate</th><th>Effettive</th><th>Skew</th></tr></thead>
+              <tbody id="compareRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TAB: MULTIDB ===================== -->
+      <section class="panel" data-panel="multidb" hidden>
+        <h2>Confronto multi-DB</h2>
+        <p class="muted">Aggiungi piani della stessa query da ambienti diversi per scoprire variazioni.</p>
+
+        <div class="actions">
+          <button id="btnAddVariant" class="primary">+ aggiungi piano</button>
+          <button id="btnRunMulti" class="primary" disabled>Confronta</button>
+          <button id="btnClearVariants" class="ghost">Svuota</button>
+        </div>
+
+        <div id="variantList" class="variants"></div>
+
+        <div id="multiOutput" class="output" hidden>
+          <h3>Sintesi</h3>
+          <pre id="multiText" class="code"></pre>
+          <h3>Per variante</h3>
+          <div id="multiVariants"></div>
+          <h3>Raccomandazioni</h3>
+          <div class="row">
+            <div class="card half">
+              <h4>Comuni</h4>
+              <ul id="multiCommon"></ul>
+            </div>
+            <div class="card half">
+              <h4>Divergenti</h4>
+              <ul id="multiDiverge"></ul>
+            </div>
+          </div>
+          <h3>SQL suggerito</h3>
+          <pre id="multiSql" class="code"></pre>
+        </div>
+      </section>
+
+      <!-- ===================== TAB: RUN ===================== -->
+      <section class="panel" data-panel="run" hidden>
+        <h2>Esegui &amp; history</h2>
+        <p class="muted">Esegue la query su SQL Server, salva la revisione, valida e analizza il piano.</p>
+
+        <div class="grid">
+          <label>Connection string
+            <input type="text" id="runConn" placeholder="Server=...;Database=...;Trusted_Connection=True;TrustServerCertificate=True"/>
+          </label>
+          <label>Slug
+            <input type="text" id="runSlug" placeholder="orders-by-date"/>
+          </label>
+          <label>Note
+            <input type="text" id="runNote" placeholder="v3 - tuned index"/>
+          </label>
+          <label>Mode
+            <select id="runMode">
+              <option value="actual">actual</option>
+              <option value="estimated">estimated</option>
+            </select>
+          </label>
+          <label>History db path
+            <input type="text" id="runHistoryDb" placeholder="planalyzer.db"/>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>SQL</span>
+          <textarea id="runSql" rows="10" spellcheck="false"></textarea>
+        </label>
+
+        <div class="actions">
+          <button id="btnRun" class="primary">Esegui + valida + analizza</button>
+          <button id="btnLoadHistory" class="ghost">Aggiorna history</button>
+        </div>
+
+        <div id="runOutput" class="output" hidden>
+          <h3>Revisione</h3>
+          <div id="runRevision" class="card"></div>
+          <h3>Validation</h3>
+          <div id="runValidation"></div>
+          <h3>Analisi piano</h3>
+          <pre id="runAnalysis" class="code"></pre>
+        </div>
+
+        <h3>History</h3>
+        <div class="table-wrap">
+          <table class="history">
+            <thead><tr><th>Rev</th><th>Quando</th><th>Mode</th><th>Durata (ms)</th><th>CPU</th><th>LR</th><th>PR</th><th>Rows</th><th>Note</th></tr></thead>
+            <tbody id="historyRows"><tr><td colspan="9" class="muted">nessuna revisione caricata</td></tr></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Side panel per dettagli revisione -->
+  <aside id="revPanel" class="side-panel" hidden>
+    <header>
+      <strong id="revPanelTitle">Revisione</strong>
+      <button id="revPanelClose" class="ghost">&times;</button>
+    </header>
+    <div class="side-body">
+      <div id="revMeta" class="card"></div>
+      <h4>SQL</h4>
+      <pre id="revSql" class="code"></pre>
+      <div class="actions">
+        <button id="btnLoadRevSql" class="primary">Carica SQL nell'editor</button>
+        <button id="btnRollback" class="danger">Rollback a questa revisione</button>
+      </div>
+    </div>
+  </aside>
+
+  <script src="/js/app.js" type="module"></script>
+</body>
+</html>
