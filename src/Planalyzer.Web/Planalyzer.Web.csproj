@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <AssemblyName>Planalyzer.Web</AssemblyName>
+    <RootNamespace>Planalyzer.Web</RootNamespace>
+    <UserSecretsId>planalyzer-web-dev</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
+    <ProjectReference Include="..\Planalyzer.Comparison\Planalyzer.Comparison.csproj" />
+    <ProjectReference Include="..\Planalyzer.Execution\Planalyzer.Execution.csproj" />
+    <ProjectReference Include="..\Planalyzer.Validation\Planalyzer.Validation.csproj" />
+  </ItemGroup>
+</Project>

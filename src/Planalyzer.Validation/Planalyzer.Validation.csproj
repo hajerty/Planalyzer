@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Planalyzer.Validation</AssemblyName>
+    <RootNamespace>Planalyzer.Validation</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="161.9118.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
+  </ItemGroup>
+</Project>

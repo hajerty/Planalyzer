@@ -1,9 +1,34 @@
 # Planalyzer
 
-Tool .NET 8 (console + librerie) per l'analisi dei **piani esecuzione SQL Server**.
-Pensato sia per neofiti (sintesi guidata, spiegazione testuale, riferimenti)
-sia per DBA esperti (dump completo delle proprietà di ogni operatore: niente
-troncamenti come in SSMS o nei tooltip).
+Tool .NET 8 (console + librerie + servizio web + GUI desktop) per:
+
+1. **Analisi piani d'esecuzione SQL Server** — sintesi + dettaglio completo.
+2. **Certificazione query** — convenzioni interne ispirate a Hugo Kornelis,
+   Pinal Dave e best practice T-SQL (vedi `docs/CERTIFICATION.md`).
+3. **Confronto piani** stimato vs effettivo e multi-DB con sintesi raccomandazioni.
+4. **Esecuzione live** con history SQLite e rollback.
+
+Pensato sia per neofiti (sintesi guidata, link a riferimenti) sia per DBA
+esperti (dump completo delle proprietà di ogni operatore: niente troncamenti
+alla SSMS).
+
+## Modalità d'uso
+
+- **CLI**: `planalyzer analyze|compare|multidb|run|history|rollback ...`
+- **GUI desktop**: `dotnet run --project src/Planalyzer.Gui` (Avalonia, cross-platform)
+- **Servizio web (localhost / LAN)**: `dotnet run --project src/Planalyzer.Web`
+  poi apri `http://localhost:5057`. La UI ha 5 tab incluso *Certifica query*.
+
+## Certificazione query
+
+Vedi `docs/CERTIFICATION.md` per il catalogo di tutte le regole VR.001..VR.034
+con severity, fonte (HK = Hugo Kornelis, PD = Pinal Dave, BP = best practice)
+e razionale.
+
+Scoring: `100 - (Critical*40 + High_non_giustificati*15 + Medium*5 + Low*1)`.
+Una query è **certificata** se ha 0 Critical e 0 High non giustificate.
+Le High possono essere disinnescate con un commento `-- justify: VR.NNN motivo`
+sopra lo statement. Le Critical no: sono blocking.
 
 Il knowledge base interno codifica le euristiche e i pattern documentati
 pubblicamente sul sito **sqlserverfast.com** di Hugo Kornelis (Plan Operators
