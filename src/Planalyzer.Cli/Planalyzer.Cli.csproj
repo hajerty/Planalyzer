@@ -11,5 +11,6 @@
     <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
     <ProjectReference Include="..\Planalyzer.Comparison\Planalyzer.Comparison.csproj" />
     <ProjectReference Include="..\Planalyzer.Execution\Planalyzer.Execution.csproj" />
+    <ProjectReference Include="..\Planalyzer.Validation\Planalyzer.Validation.csproj" />
   </ItemGroup>
 </Project>

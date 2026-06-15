@@ -14,6 +14,33 @@
             </StackPanel>
         </Border>
         <TabControl Margin="6">
+            <!-- =================== CERTIFY =================== -->
+            <TabItem Header="Certifica query">
+                <Grid RowDefinitions="Auto,*,Auto,*" ColumnDefinitions="*">
+                    <TextBlock Margin="6"
+                               Text="Valida il SQL contro le convenzioni interne (VR.001..VR.034). Score 100 = nessun problema. Una query è certificata con 0 Critical e 0 High non giustificate (giustifica con commento '-- justify: VR.NNN motivo' sopra lo statement)."
+                               TextWrapping="Wrap" Foreground="#666"/>
+                    <TextBox Grid.Row="1" Name="CertifySql" Margin="6"
+                             AcceptsReturn="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="13"
+                             TextWrapping="NoWrap"
+                             Watermark="-- digita o incolla il SQL"/>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="6" Spacing="6">
+                        <Button Name="CertifyRunButton" Content="Valida" Background="#316FA8" Foreground="White"/>
+                        <TextBlock Text="max output cols:" VerticalAlignment="Center"/>
+                        <NumericUpDown Name="CertifyMaxCols" Value="30" Minimum="1" Width="100"/>
+                        <TextBlock Text="max join tables:" VerticalAlignment="Center"/>
+                        <NumericUpDown Name="CertifyMaxJoins" Value="7" Minimum="1" Width="100"/>
+                        <TextBlock Name="CertifyBadge" VerticalAlignment="Center"
+                                   FontWeight="Bold" Text="(non ancora valutata)"/>
+                    </StackPanel>
+                    <TextBox Grid.Row="3" Name="CertifyOutput" Margin="6"
+                             AcceptsReturn="True" IsReadOnly="True"
+                             FontFamily="Consolas,Menlo,monospace" FontSize="12"
+                             TextWrapping="NoWrap"/>
+                </Grid>
+            </TabItem>
+
             <!-- =================== ANALYZE =================== -->
             <TabItem Header="Analizza piano">
                 <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="*">

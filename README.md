@@ -113,10 +113,26 @@ Produce:
 - **raccomandazioni divergenti** (solo su alcune varianti);
 - **proposta di intervento sintetica** in commenti SQL.
 
+### `validate` — certificazione query
+
+```bash
+planalyzer validate --sql "SELECT * FROM Orders;"
+planalyzer validate --sql-file query.sql --json
+planalyzer validate --sql-file q.sql --disable VR.020 VR.024 --fail-on-high
+```
+
+Exit code: `2` se una regola Critical è violata, `1` se ci sono High non
+giustificate e si è passato `--fail-on-high`, `0` altrimenti. Soglie
+configurabili: `--max-output-columns`, `--max-joined-tables`,
+`--max-derived-columns`.
+
 ### `run` — esecuzione live + history
 
 Esegue la query, cattura il piano (estimated o actual), salva la **revisione**
 (con statistiche IO/TIME) in un DB SQLite locale, poi analizza il piano.
+**Pre-flight**: prima di eseguire passa la query nel validator interno; se
+viola regole Critical (VR.010 UPDATE senza WHERE, VR.018 dynamic SQL concat)
+abortisce l'esecuzione con exit code 2.
 
 ```bash
 planalyzer run \

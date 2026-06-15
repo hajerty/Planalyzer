@@ -8,4 +8,5 @@ root.AddCommand(MultiDbCommand.Build());
 root.AddCommand(RunCommand.Build());
 root.AddCommand(HistoryCommand.Build());
 root.AddCommand(RollbackCommand.Build());
+root.AddCommand(ValidateCommand.Build());
 return await root.InvokeAsync(args);

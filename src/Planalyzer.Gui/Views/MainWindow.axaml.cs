@@ -22,6 +22,9 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
+        // Certify tab
+        CertifyRunButton.Click += CertifyRun_Click;
+
         // Analyze tab
         AnalyzePickButton.Click += AnalyzePick_Click;
         AnalyzeRunButton.Click += AnalyzeRun_Click;
@@ -234,5 +237,53 @@ public partial class MainWindow : Window
     {
         public string Label { get; set; } = "";
         public string Path { get; set; } = "";
+    }
+
+    // ---------- CERTIFY ----------
+    private void CertifyRun_Click(object? sender, RoutedEventArgs e)
+    {
+        var sql = CertifySql.Text;
+        if (string.IsNullOrWhiteSpace(sql))
+        {
+            CertifyOutput.Text = "Inserisci uno statement SQL.";
+            return;
+        }
+        var opts = new Planalyzer.Validation.ValidationOptions
+        {
+            MaxOutputColumns = (int)(CertifyMaxCols.Value ?? 30),
+            MaxJoinedTables = (int)(CertifyMaxJoins.Value ?? 7),
+        };
+        var report = new Planalyzer.Validation.QueryValidator().Validate(sql, opts);
+        CertifyBadge.Text = report.Certifiable
+            ? $"Score {report.Score}/100  ✓ CERTIFICATA"
+            : $"Score {report.Score}/100  ✗ NON CERTIFICATA";
+        CertifyBadge.Foreground = report.Certifiable
+            ? Avalonia.Media.Brushes.Green
+            : Avalonia.Media.Brushes.IndianRed;
+        CertifyOutput.Text = RenderValidationText(report);
+    }
+
+    private static string RenderValidationText(Planalyzer.Validation.ValidationReport r)
+    {
+        var sb = new StringBuilder();
+        if (!string.IsNullOrEmpty(r.ParseError))
+            sb.AppendLine($"PARSE ERROR: {r.ParseError}\n");
+        sb.AppendLine($"Score: {r.Score}/100   {(r.Certifiable ? "[CERTIFICATA]" : "[NON CERTIFICATA]")}");
+        sb.Append("Severity: ");
+        sb.AppendLine(string.Join(", ", r.CountsBySeverity.Select(kv => $"{kv.Key}={kv.Value}")));
+        sb.AppendLine();
+        foreach (var f in r.Findings
+            .OrderByDescending(f => f.Severity)
+            .ThenBy(f => f.Line ?? int.MaxValue))
+        {
+            sb.AppendLine($"[{f.Severity}] {f.RuleId} {f.Title}  ({f.Source})");
+            if (f.Line is not null) sb.AppendLine($"   L{f.Line}:C{f.Column}");
+            sb.AppendLine($"   {f.Message}");
+            if (!string.IsNullOrEmpty(f.Snippet)) sb.AppendLine($"   > {f.Snippet}");
+            if (!string.IsNullOrEmpty(f.FixHint)) sb.AppendLine($"   -> {f.FixHint}");
+            if (!string.IsNullOrEmpty(f.Justification)) sb.AppendLine($"   justify: {f.Justification}");
+            sb.AppendLine();
+        }
+        return sb.ToString();
     }
 }

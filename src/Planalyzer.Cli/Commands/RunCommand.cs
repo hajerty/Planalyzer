@@ -44,6 +44,21 @@ public static class RunCommand
                 ? CaptureMode.EstimatedPlanOnly : CaptureMode.ActualPlan;
             var level = levelStr.Equals("expert", StringComparison.OrdinalIgnoreCase) ? AudienceLevel.Expert : AudienceLevel.Beginner;
 
+            // Pre-flight: il validator blocca le query con violazioni Critical
+            // (es. UPDATE/DELETE senza WHERE, EXEC con concatenazione).
+            var preflight = new Planalyzer.Validation.QueryValidator().Validate(sql);
+            var criticals = preflight.CountsBySeverity.GetValueOrDefault(
+                nameof(Planalyzer.Validation.Severity.Critical), 0);
+            if (criticals > 0)
+            {
+                Console.Error.WriteLine("Esecuzione abortita: la query viola regole Critical.");
+                foreach (var f in preflight.Findings.Where(f => f.Severity == Planalyzer.Validation.Severity.Critical))
+                    Console.Error.WriteLine($"  [{f.RuleId}] {f.Title} (L{f.Line}): {f.Message}");
+                Console.Error.WriteLine("Disinnesco non possibile (Critical non si giustificano).");
+                ctx.ExitCode = 2;
+                return;
+            }
+
             var wb = new QueryWorkbench(conn, history);
             var rev = await wb.TryRunAsync(slug, sql, note, mode, timeout, ctx.GetCancellationToken());
 
