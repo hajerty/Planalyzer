@@ -35,8 +35,9 @@ public sealed class VR018_DynamicSqlConcat : RuleBase
             {
                 foreach (var s in esl.Strings)
                 {
-                    // s is a ValueExpression; ContainsConcat handles scalar nodes.
-                    if (s is ScalarExpression se && ContainsConcat(se))
+                    // esl.Strings is IList<ValueExpression>; ValueExpression
+                    // derives from ScalarExpression so the cast is always safe.
+                    if (ContainsConcat(s as ScalarExpression))
                     {
                         Findings.Add(_rule.Finding(
                             "EXEC con concatenazione di stringhe: rischio SQL injection.",

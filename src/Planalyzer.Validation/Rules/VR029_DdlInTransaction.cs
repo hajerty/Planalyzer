@@ -46,6 +46,6 @@ public sealed class VR029_DdlInTransaction : RuleBase
           or CreateViewStatement or AlterViewStatement or DropViewStatement
           or CreateProcedureStatement or AlterProcedureStatement or DropProcedureStatement
           or CreateFunctionStatement or AlterFunctionStatement or DropFunctionStatement
-          or CreateSchemaStatement or DropSchemaStatement
+          or CreateSchemaStatement
           or CreateTriggerStatement or AlterTriggerStatement or DropTriggerStatement;
 }
