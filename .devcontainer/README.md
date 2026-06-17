@@ -44,6 +44,25 @@ dotnet run --project src/Planalyzer.Cli -- history --slug orders-by-date
 dotnet test
 ```
 
+## Troubleshooting
+
+### 502 sulla URL forwardata di Codespaces
+
+Significa che il forwarder non riesce a connettersi al processo. Cause comuni:
+
+1. **L'app non è in esecuzione.** Lancia: `dotnet run --project src/Planalyzer.Web`. Aspetta `Now listening on: http://0.0.0.0:5057`. Solo allora la URL forwardata risponde.
+2. **L'app è bindata solo su `localhost`.** Il bind cross-platform DEVE essere `0.0.0.0:5057`. La `launchSettings.json` di default è già così; se hai usato un profilo diverso, forza l'override:
+   ```bash
+   ASPNETCORE_URLS=http://0.0.0.0:5057 dotnet run --project src/Planalyzer.Web --no-launch-profile
+   ```
+3. **Port `5057` non forwardato.** Apri il pannello *Ports* di VS Code; se manca, **Forward a Port → 5057**, visibilità **Private**.
+
+Verifica veloce dal terminale del Codespace:
+```bash
+curl -sS http://127.0.0.1:5057/api/health
+# atteso: {"status":"ok","time":"..."}
+```
+
 ## Note
 
 - La password `Planalyzer_Dev_2026!` è solo per il container dev locale dentro il Codespace. Non è esposta sulla rete pubblica: SQL Server è accessibile **solo** dal container `app` tramite la rete privata `planalyzer-net` (non è nei `forwardPorts`).

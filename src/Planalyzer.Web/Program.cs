@@ -37,8 +37,10 @@ HistoryEndpoints.Map(app);
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
-// 0.0.0.0 copre anche localhost ed espone su LAN. Per restringere a solo
-// localhost, sostituisci con "http://127.0.0.1:5057".
+// In Codespaces / LAN il bind DEVE essere su 0.0.0.0 (loopback non è
+// raggiungibile dal port-forwarder). In sviluppo locale puoi forzare il
+// loopback con PLANALYZER_URL=http://127.0.0.1:5057.
 var bindUrl = Environment.GetEnvironmentVariable("PLANALYZER_URL") ?? "http://0.0.0.0:5057";
 app.Urls.Add(bindUrl);
+app.Logger.LogInformation("Planalyzer Web in ascolto su {Url}", bindUrl);
 app.Run();

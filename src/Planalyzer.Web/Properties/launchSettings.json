@@ -2,21 +2,20 @@
   "profiles": {
     "Planalyzer.Web": {
       "commandName": "Project",
-      "launchBrowser": true,
-      "launchUrl": "",
-      "applicationUrl": "http://localhost:5057",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "PLANALYZER_URL": "http://localhost:5057"
-      }
-    },
-    "Planalyzer.Web (LAN)": {
-      "commandName": "Project",
       "launchBrowser": false,
       "applicationUrl": "http://0.0.0.0:5057",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Production",
+        "ASPNETCORE_ENVIRONMENT": "Development",
         "PLANALYZER_URL": "http://0.0.0.0:5057"
+      }
+    },
+    "Planalyzer.Web (loopback)": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "applicationUrl": "http://127.0.0.1:5057",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PLANALYZER_URL": "http://127.0.0.1:5057"
       }
     }
   }
