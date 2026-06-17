@@ -14,10 +14,27 @@ alla SSMS).
 
 ## Modalità d'uso
 
-- **CLI**: `planalyzer analyze|compare|multidb|run|history|rollback ...`
+- **CLI**: `planalyzer analyze|compare|multidb|run|history|rollback|validate ...`
 - **GUI desktop**: `dotnet run --project src/Planalyzer.Gui` (Avalonia, cross-platform)
 - **Servizio web (localhost / LAN)**: `dotnet run --project src/Planalyzer.Web`
   poi apri `http://localhost:5057`. La UI ha 5 tab incluso *Certifica query*.
+
+## Provare in GitHub Codespaces
+
+Il modo più rapido per provarlo *senza installare nulla*:
+
+1. Su GitHub: **Code → Codespaces → Create codespace on this branch**.
+2. Aspetta il post-create (compose tira su .NET 8 SDK + SQL Server 2022 e
+   fa il seed di un DB demo `PlanalyzerDemo`).
+3. In terminale: `dotnet run --project src/Planalyzer.Web` — Codespaces
+   apre automaticamente la porta `5057` nel browser.
+4. Nel tab *Esegui & history* incolla la connection string
+   `Server=db,1433;Database=PlanalyzerDemo;User Id=sa;Password=Planalyzer_Dev_2026!;TrustServerCertificate=True;Encrypt=False`
+   (è anche disponibile come env `PLANALYZER_DEMO_CONN`).
+
+In `.devcontainer/sample-queries.sql` ci sono esempi di query certificate,
+non certificate (con vari VR.NNN) e Critical da incollare nelle varie tab.
+Dettagli completi: [`.devcontainer/README.md`](.devcontainer/README.md).
 
 ## Certificazione query
 

@@ -1,0 +1,34 @@
+# Devcontainer per GitHub Codespaces (o VS Code Dev Containers).
+# Due servizi:
+#   - app: container .NET 8 SDK (è qui che vivi/sviluppi)
+#   - db:  SQL Server 2022 Developer Edition (sidecar per test live)
+#
+# Dal container `app` il database è raggiungibile con hostname `db` su 1433.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/dotnet:1-8.0
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+    depends_on:
+      - db
+    networks:
+      - planalyzer-net
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Planalyzer_Dev_2026!"
+      MSSQL_PID: "Developer"
+    restart: unless-stopped
+    networks:
+      - planalyzer-net
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 20
+      start_period: 30s
+
+networks:
+  planalyzer-net:
