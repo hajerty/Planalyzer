@@ -4,7 +4,7 @@
     <RootNamespace>Planalyzer.Validation</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="161.9118.0" />
+    <PackageReference Include="Microsoft.SqlServer.TransactSql.ScriptDom" Version="161.9118.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Planalyzer.Core\Planalyzer.Core.csproj" />
