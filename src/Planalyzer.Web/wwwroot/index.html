@@ -7,82 +7,159 @@
   <link rel="stylesheet" href="/css/app.css"/>
 </head>
 <body>
+  <!-- ===================== HEADER ===================== -->
   <header class="topbar">
-    <h1>Planalyzer</h1>
-    <span class="subtitle">SQL Server query &amp; plan analyzer</span>
-    <span class="health" id="health" title="stato servizio">&middot;</span>
+    <div class="brand">
+      <h1>Planalyzer</h1>
+      <span class="subtitle">SQL Server query certification, plan analysis &amp; live execution</span>
+    </div>
+    <div class="topbar-actions">
+      <span class="health" id="health" title="stato servizio" aria-live="polite">
+        <span class="dot"></span><span class="label">verifica…</span>
+      </span>
+      <a class="btn ghost small" href="/swagger" target="_blank" rel="noopener">API docs</a>
+      <button class="btn ghost small" id="btnHelp" type="button">Aiuto</button>
+    </div>
   </header>
 
+  <!-- ===================== MOBILE TAB SELECT ===================== -->
+  <div class="tab-select-wrap">
+    <label class="tab-select">
+      <span>Sezione</span>
+      <select id="tabSelect">
+        <option value="certify">Certifica query</option>
+        <option value="analyze">Analizza piano</option>
+        <option value="compare">Stimato vs Effettivo</option>
+        <option value="multidb">Multi-DB</option>
+        <option value="run">Esegui &amp; history</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- ===================== LAYOUT ===================== -->
   <div class="layout">
-    <nav class="sidebar" id="tabs" role="tablist">
-      <button class="tab active" role="tab" data-tab="certify">Certifica query</button>
-      <button class="tab" role="tab" data-tab="analyze">Analizza piano</button>
-      <button class="tab" role="tab" data-tab="compare">Stimato vs Effettivo</button>
-      <button class="tab" role="tab" data-tab="multidb">Multi-DB</button>
-      <button class="tab" role="tab" data-tab="run">Esegui &amp; history</button>
+    <nav class="sidebar" id="tabs" role="tablist" aria-label="Sezioni">
+      <button class="tab active" role="tab" data-tab="certify"><span class="tab-num">1</span> Certifica query</button>
+      <button class="tab" role="tab" data-tab="analyze"><span class="tab-num">2</span> Analizza piano</button>
+      <button class="tab" role="tab" data-tab="compare"><span class="tab-num">3</span> Stimato vs Effettivo</button>
+      <button class="tab" role="tab" data-tab="multidb"><span class="tab-num">4</span> Multi-DB</button>
+      <button class="tab" role="tab" data-tab="run"><span class="tab-num">5</span> Esegui &amp; history</button>
     </nav>
 
     <main class="content">
-      <div id="globalError" class="alert" role="alert" hidden></div>
+      <div id="globalError" class="alert" role="alert" hidden>
+        <span class="alert-msg"></span>
+        <button type="button" class="alert-close" aria-label="Chiudi">&times;</button>
+      </div>
 
-      <!-- ===================== TAB: CERTIFY ===================== -->
+      <!-- ============================================================ -->
+      <!-- TAB: CERTIFY                                                  -->
+      <!-- ============================================================ -->
       <section class="panel" data-panel="certify">
-        <h2>Certifica query</h2>
-        <p class="muted">Valida lo statement contro le convenzioni interne (VR.001..VR.034).</p>
+        <div class="panel-head">
+          <h2>Certifica query</h2>
+        </div>
 
-        <label class="field">
-          <span>SQL</span>
-          <textarea id="certifySql" rows="14" spellcheck="false" placeholder="SELECT ... FROM dbo.Orders o ..."></textarea>
-        </label>
+        <details class="guide" open>
+          <summary>Cosa fa questa sezione</summary>
+          <p>
+            Questa validazione applica <strong>34 regole</strong> ispirate a
+            Hugo Kornelis (<em>sqlserverfast.com</em>) e Pinal Dave
+            (<em>sqlauthority.com</em>), più alcune best practice interne.
+            Ogni regola cerca un anti-pattern noto nel testo SQL; alla fine
+            ottieni uno <strong>score</strong> (0-100) e l'indicazione se la
+            query è <em>certificabile</em>. L'elenco completo delle regole,
+            con la possibilità di disabilitarle, è qui sotto.
+          </p>
+        </details>
+
+        <details class="catalog">
+          <summary><strong>Catalogo regole</strong> <span class="muted" id="rulesCount"></span></summary>
+          <div class="catalog-toolbar">
+            <input type="search" id="rulesFilter" placeholder="cerca per regola, titolo, severity o fonte…" autocomplete="off"/>
+            <div class="catalog-actions">
+              <button type="button" class="btn ghost small" id="rulesEnableAll">Abilita tutte</button>
+              <button type="button" class="btn ghost small" id="rulesDisableAll">Disabilita tutte</button>
+            </div>
+          </div>
+          <div class="table-wrap catalog-table-wrap">
+            <table class="catalog-table">
+              <thead>
+                <tr>
+                  <th style="width:56px;">Attiva</th>
+                  <th style="width:100px;">Regola</th>
+                  <th>Titolo</th>
+                  <th style="width:110px;">Severity</th>
+                  <th style="width:70px;">Fonte</th>
+                </tr>
+              </thead>
+              <tbody id="rulesTable"><tr><td colspan="5" class="muted">caricamento…</td></tr></tbody>
+            </table>
+          </div>
+        </details>
 
         <details class="options">
-          <summary>Opzioni di validazione</summary>
+          <summary>Opzioni soglie</summary>
           <div class="grid">
-            <label>maxOutputColumns
+            <label>Colonne output max
               <input type="number" id="opt-maxOutputColumns" min="1" placeholder="30"/>
             </label>
-            <label>maxJoinedTables
+            <label>Tabelle joined max
               <input type="number" id="opt-maxJoinedTables" min="1" placeholder="7"/>
             </label>
-            <label>maxDerivedColumns
+            <label>Colonne derivate max
               <input type="number" id="opt-maxDerivedColumns" min="1" placeholder="8"/>
             </label>
-            <label>maxEstimatedRows
+            <label>Righe stimate max
               <input type="number" id="opt-maxEstimatedRows" min="1" placeholder="100000"/>
             </label>
-            <label>maxTablesWithoutAlias
+            <label>Tabelle senza alias max
               <input type="number" id="opt-maxTablesWithoutAlias" min="0" placeholder="1"/>
             </label>
-            <label>maxStatementLines
+            <label>Righe SQL max
               <input type="number" id="opt-maxStatementLines" min="1" placeholder="200"/>
             </label>
           </div>
-          <fieldset class="rules">
-            <legend>Regole disabilitate</legend>
-            <div id="ruleList" class="rule-list">caricamento&hellip;</div>
-          </fieldset>
         </details>
 
+        <label class="field">
+          <span>SQL da validare</span>
+          <textarea id="certifySql" spellcheck="false" placeholder="SELECT o.OrderId, o.CustomerId FROM dbo.Orders o WHERE o.OrderDate &gt;= '2025-01-01' ..."></textarea>
+        </label>
+
         <div class="actions">
-          <button id="btnValidate" class="primary">Valida</button>
-          <button id="btnValidateClear" class="ghost">Pulisci</button>
+          <button id="btnValidate" class="btn primary" type="button">Valida</button>
+          <button id="btnValidateClear" class="btn ghost" type="button">Pulisci</button>
+        </div>
+
+        <div id="certifyEmpty" class="empty">
+          <div class="empty-icon" aria-hidden="true">&#9678;</div>
+          <div class="empty-title">Incolla una query e clicca <strong>Valida</strong></div>
+          <div class="empty-sub">Otterrai score, certificazione e findings dettagliati per regola.</div>
         </div>
 
         <div id="validateOutput" class="output" hidden>
+          <button type="button" class="output-close" data-close="validateOutput" aria-label="Chiudi risultati">&times;</button>
+
           <div class="cert-summary">
             <div class="score-box">
               <div class="score" id="vScore">--</div>
               <div class="score-label">Score</div>
             </div>
-            <div class="cert-badge" id="vBadge">--</div>
-            <div class="counts" id="vCounts"></div>
+            <div class="score-details">
+              <div class="cert-badge" id="vBadge">--</div>
+              <div id="vSummaryText" class="muted"></div>
+            </div>
           </div>
+
+          <h3>Riepilogo per severity</h3>
+          <div id="vSeverityBars" class="sev-bars"></div>
 
           <h3>Findings</h3>
           <div class="table-wrap">
             <table class="findings">
               <thead>
-                <tr><th>Sev</th><th>Regola</th><th>L:C</th><th>Fonte</th><th>Messaggio</th><th>Snippet / Fix</th></tr>
+                <tr><th style="width:110px;">Severity</th><th style="width:130px;">Regola</th><th style="width:80px;">L:C</th><th>Messaggio</th></tr>
               </thead>
               <tbody id="vFindings"></tbody>
             </table>
@@ -92,91 +169,191 @@
             <strong>Fonti:</strong>
             <span><code>HK</code> Hugo Kornelis</span>
             <span><code>PD</code> Pinal Dave</span>
-            <span><code>BP</code> Best practice</span>
+            <span><code>BP</code> Best practice interna</span>
           </div>
         </div>
       </section>
 
-      <!-- ===================== TAB: ANALYZE ===================== -->
+      <!-- ============================================================ -->
+      <!-- TAB: ANALYZE                                                  -->
+      <!-- ============================================================ -->
       <section class="panel" data-panel="analyze" hidden>
-        <h2>Analizza piano d'esecuzione</h2>
-        <p class="muted">Carica un file <code>.sqlplan</code> o <code>.xml</code> e ottieni l'analisi testuale.</p>
+        <div class="panel-head">
+          <h2>Analizza piano d'esecuzione</h2>
+        </div>
+
+        <details class="guide" open>
+          <summary>Cosa fa questa sezione</summary>
+          <p>
+            Carica un file <code>.sqlplan</code> o <code>.xml</code>
+            (Estimated <em>o</em> Actual) e ottieni un'analisi sintetica del
+            piano insieme a finding di anti-pattern. Modalità
+            <strong>Beginner</strong>: riassunto orientato allo sviluppatore.
+            Modalità <strong>Expert</strong>: tutte le proprietà degli
+            operatori, utile per DBA.
+          </p>
+        </details>
 
         <div class="row">
           <label class="field">
-            <span>File piano</span>
+            <span>File piano (.sqlplan / .xml)</span>
             <input type="file" id="analyzeFile" accept=".sqlplan,.xml,text/xml"/>
           </label>
-          <label class="field">
-            <span>Livello</span>
+          <label class="field short">
+            <span>Livello di dettaglio</span>
             <select id="analyzeLevel">
               <option value="beginner">Beginner</option>
               <option value="expert">Expert</option>
             </select>
           </label>
-          <div class="actions">
-            <button id="btnAnalyze" class="primary">Analizza</button>
+          <div class="actions align-end">
+            <button id="btnAnalyze" class="btn primary" type="button">Analizza</button>
           </div>
+        </div>
+
+        <div id="analyzeEmpty" class="empty">
+          <div class="empty-icon" aria-hidden="true">&#9634;</div>
+          <div class="empty-title">Carica un file <strong>.sqlplan</strong> per iniziare</div>
+          <div class="empty-sub">Puoi esportarlo da SSMS con <code>Include Actual Execution Plan</code> o <code>Display Estimated Execution Plan</code>.</div>
         </div>
 
         <div id="analyzeOutput" class="output" hidden>
-          <h3>Output</h3>
-          <pre id="analyzeText" class="code"></pre>
+          <button type="button" class="output-close" data-close="analyzeOutput" aria-label="Chiudi risultati">&times;</button>
+
+          <div class="cards-row">
+            <div class="card metric">
+              <div class="metric-label">Statement</div>
+              <div class="metric-value" id="anStmtCount">–</div>
+            </div>
+            <div class="card metric">
+              <div class="metric-label">Costo totale</div>
+              <div class="metric-value" id="anTotalCost">–</div>
+            </div>
+            <div class="card metric">
+              <div class="metric-label">Tipo piano</div>
+              <div class="metric-value small" id="anPlanKind">–</div>
+            </div>
+            <div class="card metric">
+              <div class="metric-label">Server build</div>
+              <div class="metric-value small" id="anServer">–</div>
+            </div>
+          </div>
+
           <h3>Statement</h3>
           <div id="analyzeStatements"></div>
+
+          <details class="raw-block">
+            <summary>Piano completo (testo raw)</summary>
+            <pre id="analyzeText" class="code"></pre>
+          </details>
+
+          <div class="actions">
+            <button type="button" class="btn ghost" id="btnDownloadAnalysis">Scarica raw output (.txt)</button>
+          </div>
         </div>
       </section>
 
-      <!-- ===================== TAB: COMPARE ===================== -->
+      <!-- ============================================================ -->
+      <!-- TAB: COMPARE                                                  -->
+      <!-- ============================================================ -->
       <section class="panel" data-panel="compare" hidden>
-        <h2>Stimato vs Effettivo</h2>
-        <p class="muted">Confronta due piani per evidenziare lo skew tra righe stimate ed effettive.</p>
+        <div class="panel-head">
+          <h2>Stimato vs Effettivo</h2>
+        </div>
+
+        <details class="guide" open>
+          <summary>Cosa fa questa sezione</summary>
+          <p>
+            Confronta il piano <strong>stimato</strong> con quello
+            <strong>effettivo</strong> per la stessa query. Uno skew grande
+            (differenza fra righe stimate ed effettive) segnala tipicamente
+            statistiche obsolete, parameter sniffing o un problema di
+            cardinalità. Skew <strong>≥ 10x</strong> è evidenziato in rosso,
+            tra 2x e 10x in giallo.
+          </p>
+        </details>
 
         <div class="row">
           <label class="field">
-            <span>Piano stimato</span>
+            <span>Piano stimato <span class="muted">(SET SHOWPLAN_XML)</span></span>
             <input type="file" id="estimatedFile" accept=".sqlplan,.xml,text/xml"/>
           </label>
           <label class="field">
-            <span>Piano effettivo</span>
+            <span>Piano effettivo <span class="muted">(SET STATISTICS XML)</span></span>
             <input type="file" id="actualFile" accept=".sqlplan,.xml,text/xml"/>
           </label>
-          <div class="actions">
-            <button id="btnCompare" class="primary">Confronta</button>
+          <div class="actions align-end">
+            <button id="btnCompare" class="btn primary" type="button">Confronta</button>
           </div>
+        </div>
+
+        <div id="compareEmpty" class="empty">
+          <div class="empty-icon" aria-hidden="true">&#8646;</div>
+          <div class="empty-title">Carica entrambi i piani per confrontarli</div>
+          <div class="empty-sub">Stimato + Effettivo della stessa query, stesso ambiente.</div>
         </div>
 
         <div id="compareOutput" class="output" hidden>
-          <h3>Sintesi</h3>
-          <pre id="compareText" class="code"></pre>
+          <button type="button" class="output-close" data-close="compareOutput" aria-label="Chiudi risultati">&times;</button>
+
+          <div id="compareBanner" class="banner"></div>
+
           <h3>Diff per nodo</h3>
           <div class="table-wrap">
             <table class="diff">
-              <thead><tr><th>Nodo</th><th>Stimate</th><th>Effettive</th><th>Skew</th></tr></thead>
+              <thead><tr><th>Nodo</th><th style="width:120px;">Stimate</th><th style="width:120px;">Effettive</th><th style="width:100px;">Skew</th></tr></thead>
               <tbody id="compareRows"></tbody>
             </table>
           </div>
+
+          <h3>Sintesi</h3>
+          <pre id="compareText" class="code"></pre>
         </div>
       </section>
 
-      <!-- ===================== TAB: MULTIDB ===================== -->
+      <!-- ============================================================ -->
+      <!-- TAB: MULTIDB                                                  -->
+      <!-- ============================================================ -->
       <section class="panel" data-panel="multidb" hidden>
-        <h2>Confronto multi-DB</h2>
-        <p class="muted">Aggiungi piani della stessa query da ambienti diversi per scoprire variazioni.</p>
+        <div class="panel-head">
+          <h2>Confronto multi-DB</h2>
+        </div>
+
+        <details class="guide" open>
+          <summary>Cosa fa questa sezione</summary>
+          <p>
+            Aggiungi i piani della <strong>stessa query</strong> eseguita su
+            DB o ambienti diversi (dev / staging / prod, oppure due tenant).
+            Planalyzer confronta le forme dei piani ed evidenzia
+            raccomandazioni <em>applicabili ovunque</em> vs
+            <em>divergenti</em>, con una proposta di SQL rifattorizzato.
+          </p>
+        </details>
 
         <div class="actions">
-          <button id="btnAddVariant" class="primary">+ aggiungi piano</button>
-          <button id="btnRunMulti" class="primary" disabled>Confronta</button>
-          <button id="btnClearVariants" class="ghost">Svuota</button>
+          <button id="btnAddVariant" class="btn primary" type="button">+ Aggiungi piano</button>
+          <button id="btnRunMulti" class="btn primary" type="button" disabled>Confronta</button>
+          <button id="btnClearVariants" class="btn ghost" type="button">Svuota</button>
+          <span class="variant-counter" id="variantCounter">Piani caricati: 0 / 2+</span>
         </div>
 
         <div id="variantList" class="variants"></div>
 
+        <div id="multiEmpty" class="empty">
+          <div class="empty-icon" aria-hidden="true">&#9862;</div>
+          <div class="empty-title">Aggiungi almeno <strong>due piani</strong> per iniziare</div>
+          <div class="empty-sub">Idealmente la stessa query, ambienti diversi.</div>
+        </div>
+
         <div id="multiOutput" class="output" hidden>
+          <button type="button" class="output-close" data-close="multiOutput" aria-label="Chiudi risultati">&times;</button>
+
           <h3>Sintesi</h3>
           <pre id="multiText" class="code"></pre>
+
           <h3>Per variante</h3>
           <div id="multiVariants"></div>
+
           <h3>Raccomandazioni</h3>
           <div class="row">
             <div class="card half">
@@ -188,48 +365,81 @@
               <ul id="multiDiverge"></ul>
             </div>
           </div>
+
           <h3>SQL suggerito</h3>
-          <pre id="multiSql" class="code"></pre>
+          <pre id="multiSql" class="code sql"></pre>
         </div>
       </section>
 
-      <!-- ===================== TAB: RUN ===================== -->
+      <!-- ============================================================ -->
+      <!-- TAB: RUN & HISTORY                                            -->
+      <!-- ============================================================ -->
       <section class="panel" data-panel="run" hidden>
-        <h2>Esegui &amp; history</h2>
-        <p class="muted">Esegue la query su SQL Server, salva la revisione, valida e analizza il piano.</p>
+        <div class="panel-head">
+          <h2>Esegui &amp; history</h2>
+        </div>
 
-        <div class="grid">
-          <label>Connection string
-            <input type="text" id="runConn" placeholder="Server=...;Database=...;Trusted_Connection=True;TrustServerCertificate=True"/>
-          </label>
-          <label>Slug
-            <input type="text" id="runSlug" placeholder="orders-by-date"/>
-          </label>
-          <label>Note
-            <input type="text" id="runNote" placeholder="v3 - tuned index"/>
-          </label>
-          <label>Mode
-            <select id="runMode">
-              <option value="actual">actual</option>
-              <option value="estimated">estimated</option>
-            </select>
-          </label>
-          <label>History db path
-            <input type="text" id="runHistoryDb" placeholder="planalyzer.db"/>
-          </label>
+        <details class="guide" open>
+          <summary>Cosa fa questa sezione</summary>
+          <p>
+            Esegue una query contro un database SQL Server. Ogni esecuzione
+            diventa una <strong>revisione</strong> immutabile salvata nella
+            cronologia (Postgres), con SQL, piano d'esecuzione e statistiche.
+            Puoi <strong>confrontare</strong> due revisioni per vedere cosa è
+            cambiato nel SQL, e fare <strong>rollback</strong> per creare una
+            nuova revisione che ripristina il testo di una versione
+            precedente — <em>senza cancellare nulla</em>.
+          </p>
+        </details>
+
+        <div class="card connections">
+          <h4>Connessioni</h4>
+          <div class="grid">
+            <label>Connection string SQL Server (target)
+              <input type="text" id="runConn" placeholder="Server=...;Database=...;Trusted_Connection=True;TrustServerCertificate=True"/>
+            </label>
+            <label>Connection string Postgres (history)
+              <input type="text" id="runHistoryConn" placeholder="Host=localhost;Database=planalyzer;Username=...;Password=..."/>
+            </label>
+          </div>
+          <p class="muted small">Le connection string non vengono salvate sul server: restano solo nel <code>localStorage</code> del tuo browser.</p>
+        </div>
+
+        <div class="card">
+          <h4>Slug</h4>
+          <p class="muted small">Nome logico della query. Tutte le revisioni con lo stesso slug sono <em>la stessa query in evoluzione</em>.</p>
+          <div class="grid">
+            <label>Slug
+              <input type="text" id="runSlug" placeholder="orders-by-date"/>
+            </label>
+            <label>Note (opzionale)
+              <input type="text" id="runNote" placeholder="v3 - tuned index"/>
+            </label>
+            <label>Modalità
+              <select id="runMode">
+                <option value="actual">actual (esegue + STATISTICS XML)</option>
+                <option value="estimated">estimated (solo SHOWPLAN_XML)</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         <label class="field">
-          <span>SQL</span>
-          <textarea id="runSql" rows="10" spellcheck="false"></textarea>
+          <span>
+            SQL da eseguire
+            <span class="counter" id="sqlCounter">0 righe · 0 caratteri</span>
+          </span>
+          <textarea id="runSql" spellcheck="false" placeholder="SELECT ..."></textarea>
         </label>
 
         <div class="actions">
-          <button id="btnRun" class="primary">Esegui + valida + analizza</button>
-          <button id="btnLoadHistory" class="ghost">Aggiorna history</button>
+          <button id="btnRun" class="btn primary" type="button">Esegui + valida + analizza</button>
+          <button id="btnRunValidateOnly" class="btn secondary" type="button">Solo valida</button>
+          <button id="btnLoadHistory" class="btn ghost" type="button">Aggiorna history</button>
         </div>
 
         <div id="runOutput" class="output" hidden>
+          <button type="button" class="output-close" data-close="runOutput" aria-label="Chiudi risultati">&times;</button>
           <h3>Revisione</h3>
           <div id="runRevision" class="card"></div>
           <h3>Validation</h3>
@@ -238,33 +448,126 @@
           <pre id="runAnalysis" class="code"></pre>
         </div>
 
-        <h3>History</h3>
+        <div class="history-head">
+          <h3>Cronologia revisioni</h3>
+          <div class="history-actions">
+            <button id="btnCompareRevs" class="btn ghost small" type="button" disabled>Confronta selezionate (0/2)</button>
+            <button id="btnClearRevSel" class="btn ghost small" type="button">Deseleziona</button>
+          </div>
+        </div>
         <div class="table-wrap">
           <table class="history">
-            <thead><tr><th>Rev</th><th>Quando</th><th>Mode</th><th>Durata (ms)</th><th>CPU</th><th>LR</th><th>PR</th><th>Rows</th><th>Note</th></tr></thead>
-            <tbody id="historyRows"><tr><td colspan="9" class="muted">nessuna revisione caricata</td></tr></tbody>
+            <thead>
+              <tr>
+                <th style="width:36px;"></th>
+                <th style="width:60px;">Rev</th>
+                <th>Data</th>
+                <th style="width:100px;">Durata</th>
+                <th style="width:90px;">LRead</th>
+                <th style="width:80px;">Rows</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody id="historyRows"><tr><td colspan="7" class="muted">imposta slug e clicca <em>Aggiorna history</em></td></tr></tbody>
           </table>
+        </div>
+
+        <!-- Diff panel per confronto revisioni -->
+        <div id="revDiffOutput" class="output" hidden>
+          <button type="button" class="output-close" data-close="revDiffOutput" aria-label="Chiudi diff">&times;</button>
+          <h3>Diff revisioni</h3>
+          <div id="revDiffHead" class="diff-head"></div>
+          <div class="diff-cols">
+            <div class="diff-col">
+              <div class="diff-col-title" id="revDiffTitleA"></div>
+              <pre id="revDiffA" class="code diff-pre"></pre>
+            </div>
+            <div class="diff-col">
+              <div class="diff-col-title" id="revDiffTitleB"></div>
+              <pre id="revDiffB" class="code diff-pre"></pre>
+            </div>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- Side panel per dettagli revisione -->
-  <aside id="revPanel" class="side-panel" hidden>
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <span>Planalyzer — SQL Server certification &amp; plan analysis</span>
+    <a href="/swagger" target="_blank" rel="noopener">API docs</a>
+  </footer>
+
+  <!-- ===================== SIDE PANEL: REVISION ===================== -->
+  <div id="revBackdrop" class="backdrop" hidden></div>
+  <aside id="revPanel" class="side-panel" hidden aria-labelledby="revPanelTitle">
     <header>
       <strong id="revPanelTitle">Revisione</strong>
-      <button id="revPanelClose" class="ghost">&times;</button>
+      <button id="revPanelClose" class="side-panel-close" type="button" aria-label="Chiudi pannello">&times;</button>
     </header>
     <div class="side-body">
+      <div class="explain-box">
+        <strong>Cos'è una revisione?</strong>
+        <p>Uno <em>snapshot immutabile</em> di SQL + piano d'esecuzione + statistiche di quella singola esecuzione. La cronologia non viene mai riscritta.</p>
+      </div>
+
+      <h4>Statistiche</h4>
       <div id="revMeta" class="card"></div>
-      <h4>SQL</h4>
+
+      <h4>SQL della revisione <button id="btnCopyRevSql" class="btn ghost small" type="button">Copia</button></h4>
       <pre id="revSql" class="code"></pre>
+
+      <div class="explain-box">
+        <p><strong>Carica SQL nell'editor:</strong> copia il testo nell'editor senza toccare la cronologia. Modifiche e successiva esecuzione creeranno una nuova revisione.</p>
+        <p><strong>Rollback:</strong> crea una <em>nuova revisione</em> con lo stesso SQL di questa. La cronologia resta intatta.</p>
+      </div>
+
       <div class="actions">
-        <button id="btnLoadRevSql" class="primary">Carica SQL nell'editor</button>
-        <button id="btnRollback" class="danger">Rollback a questa revisione</button>
+        <button id="btnLoadRevSql" class="btn primary" type="button">Carica SQL nell'editor</button>
+        <button id="btnRollback" class="btn danger" type="button">Rollback a questa revisione</button>
       </div>
     </div>
   </aside>
+
+  <!-- ===================== MODAL: HELP ===================== -->
+  <div id="helpModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-help></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <header>
+        <strong id="helpTitle">Come si usa Planalyzer</strong>
+        <button type="button" class="side-panel-close" data-close-help aria-label="Chiudi">&times;</button>
+      </header>
+      <div class="modal-body">
+        <p class="muted">I 5 tab, in ordine tipico d'uso:</p>
+        <ol class="help-list">
+          <li><strong>Certifica query</strong> — incolla il SQL e ottieni score + findings contro 34 regole (Kornelis, Pinal Dave, best practice). Puoi disabilitare singole regole dal catalogo.</li>
+          <li><strong>Analizza piano</strong> — carica un <code>.sqlplan</code> (stimato o effettivo) e ottieni analisi per statement, warning e top-operator.</li>
+          <li><strong>Stimato vs Effettivo</strong> — confronta due piani della stessa query per trovare skew di cardinalità.</li>
+          <li><strong>Multi-DB</strong> — confronta piani da ambienti diversi (dev/stage/prod, o tenant) e ottieni raccomandazioni comuni.</li>
+          <li><strong>Esegui &amp; history</strong> — esegui la query contro un DB, salva una <em>revisione</em> nella cronologia Postgres, confronta revisioni, fai rollback.</li>
+        </ol>
+        <p class="muted small">L'API completa è documentata su <a href="/swagger" target="_blank" rel="noopener">/swagger</a>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MODAL: CONFIRM ===================== -->
+  <div id="confirmModal" class="modal" hidden>
+    <div class="modal-backdrop" data-close-confirm></div>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <header>
+        <strong id="confirmTitle">Conferma</strong>
+        <button type="button" class="side-panel-close" data-close-confirm aria-label="Chiudi">&times;</button>
+      </header>
+      <div class="modal-body">
+        <p id="confirmMessage"></p>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost" data-close-confirm>Annulla</button>
+        <button type="button" class="btn primary" id="confirmOk">Conferma</button>
+      </div>
+    </div>
+  </div>
 
   <script src="/js/app.js" type="module"></script>
 </body>
