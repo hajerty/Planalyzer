@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Planalyzer.Execution\Planalyzer.Execution.csproj" />
     <ProjectReference Include="..\Planalyzer.Validation\Planalyzer.Validation.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.10" />
+  </ItemGroup>
 </Project>

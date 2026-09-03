@@ -12,13 +12,13 @@ public sealed class QueryWorkbench : IDisposable
     private readonly SqlPlanRunner _runner;
     private readonly QueryHistoryStore _store;
 
-    public QueryWorkbench(string connectionString, string historyDbPath)
+    public QueryWorkbench(string connectionString, string historyConnectionString)
     {
         _runner = new SqlPlanRunner(connectionString);
-        _store = new QueryHistoryStore(historyDbPath);
+        _store = new QueryHistoryStore(historyConnectionString);
     }
 
-    public string HistoryPath => _store.Path;
+    public string HistoryConnectionString => _store.ConnectionString;
 
     public async Task<QueryRevision> TryRunAsync(string slug, string sql, string? note,
                                                  CaptureMode mode = CaptureMode.ActualPlan,

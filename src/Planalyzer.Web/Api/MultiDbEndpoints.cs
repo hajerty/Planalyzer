@@ -32,6 +32,13 @@ public static class MultiDbEndpoints
                 });
             }
             catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+        })
+        .WithName("PostMultiDb")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Confronta piani della stessa query su più database";
+            o.Description = "Accetta 2+ varianti (label + planXml) e restituisce raccomandazioni comuni, divergenti e un eventuale SQL suggerito.";
+            return o;
         });
     }
 }

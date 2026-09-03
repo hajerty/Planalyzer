@@ -43,6 +43,13 @@ public static class AnalyzeEndpoints
                 });
             }
             catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+        })
+        .WithName("PostAnalyze")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Analizza uno showplan XML";
+            o.Description = "Parsea un piano di esecuzione SQL Server (estimated o actual) e produce findings, hot operators e testo esplicativo per livello beginner/expert.";
+            return o;
         });
     }
 }

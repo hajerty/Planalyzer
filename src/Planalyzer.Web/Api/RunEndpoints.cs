@@ -10,11 +10,19 @@ public sealed record RunRequest(
     string Slug,
     string Sql,
     string? Note,
-    string? Mode,             // "actual" | "estimated"
-    string? HistoryDbPath);
+    string? Mode,                        // "actual" | "estimated"
+    string? HistoryConnectionString);    // Postgres conn string; fallback env PLANALYZER_HISTORY_CONN
 
 public static class RunEndpoints
 {
+    private const string DefaultLocalHistoryConn =
+        "Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026";
+
+    private static string ResolveHistoryConn(string? fromRequest) =>
+        !string.IsNullOrWhiteSpace(fromRequest)
+            ? fromRequest!
+            : Environment.GetEnvironmentVariable("PLANALYZER_HISTORY_CONN") ?? DefaultLocalHistoryConn;
+
     public static void Map(WebApplication app)
     {
         app.MapPost("/api/run", async (RunRequest req) =>
@@ -26,7 +34,7 @@ public static class RunEndpoints
 
             var mode = string.Equals(req.Mode, "estimated", StringComparison.OrdinalIgnoreCase)
                 ? CaptureMode.EstimatedPlanOnly : CaptureMode.ActualPlan;
-            var dbPath = string.IsNullOrWhiteSpace(req.HistoryDbPath) ? "planalyzer.db" : req.HistoryDbPath;
+            var historyConn = ResolveHistoryConn(req.HistoryConnectionString);
 
             // Always run the validator before sending the SQL: if it's
             // Critical-broken we refuse to execute it.
@@ -38,7 +46,7 @@ public static class RunEndpoints
                     validation = report,
                 });
 
-            using var wb = new QueryWorkbench(req.ConnectionString, dbPath);
+            using var wb = new QueryWorkbench(req.ConnectionString, historyConn);
             var rev = await wb.TryRunAsync(req.Slug, req.Sql, req.Note, mode, 120);
 
             object? analysis = null;
@@ -49,20 +57,34 @@ public static class RunEndpoints
                 analysis = new { text = TextRenderer.Render(an, AudienceLevel.Beginner) };
             }
             return Results.Ok(new { revision = rev, analysis, validation = report });
+        })
+        .WithName("PostRun")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Esegue una query e salva la revisione";
+            o.Description = "Certifica il SQL (blocca se Critical), lo esegue su SQL Server con il piano richiesto, salva la revisione nell'history Postgres e ritorna analisi + telemetria.";
+            return o;
         });
 
         app.MapPost("/api/rollback", (RollbackRequest req) =>
         {
             if (string.IsNullOrWhiteSpace(req.Slug))
                 return Results.BadRequest(new { error = "slug required" });
-            var dbPath = string.IsNullOrWhiteSpace(req.HistoryDbPath) ? "planalyzer.db" : req.HistoryDbPath;
-            using var wb = new QueryWorkbench("Server=.", dbPath);
+            var historyConn = ResolveHistoryConn(req.HistoryConnectionString);
+            using var wb = new QueryWorkbench("Server=.", historyConn);
             var rec = wb.Rollback(req.Slug, req.To, "rollback via API");
             return rec is null
                 ? Results.NotFound(new { error = $"revision {req.To} not found" })
                 : Results.Ok(rec);
+        })
+        .WithName("PostRollback")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Ripristina una revisione precedente";
+            o.Description = "Crea una nuova revisione con lo stesso SQL della revisione target; le statistiche vanno ricalcolate rieseguendo la query.";
+            return o;
         });
     }
 }
 
-public sealed record RollbackRequest(string Slug, int To, string? HistoryDbPath);
+public sealed record RollbackRequest(string Slug, int To, string? HistoryConnectionString);

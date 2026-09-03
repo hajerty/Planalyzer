@@ -32,6 +32,13 @@ public static class ValidateEndpoints
             };
             var v = new QueryValidator();
             return Results.Ok(v.Validate(req.Sql, opts));
+        })
+        .WithName("PostValidate")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Certifica una query SQL Server";
+            o.Description = "Esegue tutte le regole di certificazione interna (statiche) sul testo SQL e restituisce il report con findings e conteggi per severità.";
+            return o;
         });
 
         app.MapGet("/api/rules", () =>
@@ -43,6 +50,13 @@ public static class ValidateEndpoints
                 severity = r.DefaultSeverity.ToString(),
                 source = r.Source,
             }));
+        })
+        .WithName("GetRules")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Elenca le regole di certificazione";
+            o.Description = "Restituisce id, titolo, severità di default e fonte per ogni regola caricata nel registry.";
+            return o;
         });
     }
 }

@@ -122,8 +122,9 @@
                         <TextBlock Text="Connection string:" VerticalAlignment="Center"/>
                         <TextBox Name="LiveConn" Width="520"
                                  Watermark="Server=.;Database=...;Trusted_Connection=True;TrustServerCertificate=True"/>
-                        <TextBlock Text="History DB:" VerticalAlignment="Center"/>
-                        <TextBox Name="LiveHistoryDb" Text="planalyzer.db" Width="200"/>
+                        <TextBlock Text="Postgres history conn:" VerticalAlignment="Center"/>
+                        <TextBox Name="LiveHistoryDb" Width="360"
+                                 Watermark="Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=..."/>
                     </StackPanel>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="6" Spacing="6"
                                 Grid.ColumnSpan="2">

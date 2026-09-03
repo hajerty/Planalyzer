@@ -7,7 +7,10 @@ public static class RollbackCommand
 {
     public static Command Build()
     {
-        var historyOpt = new Option<string>("--history", () => "planalyzer.db", "Path del DB di history.");
+        var historyOpt = new Option<string>("--history",
+            () => Environment.GetEnvironmentVariable("PLANALYZER_HISTORY_CONN")
+                  ?? "Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026",
+            "Connection string Postgres per l'history.");
         var slugOpt = new Option<string>("--slug", "Slug della query.") { IsRequired = true };
         var revOpt = new Option<int>("--to", "Numero della revisione a cui tornare.") { IsRequired = true };
         var noteOpt = new Option<string?>("--note", "Note del rollback.");

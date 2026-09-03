@@ -18,9 +18,14 @@ public partial class MainWindow : Window
     private string? _cmpEstFile;
     private string? _cmpActFile;
 
+    private static string DefaultHistoryConn =>
+        Environment.GetEnvironmentVariable("PLANALYZER_HISTORY_CONN")
+        ?? "Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026";
+
     public MainWindow()
     {
         InitializeComponent();
+        LiveHistoryDb.Text = DefaultHistoryConn;
 
         // Certify tab
         CertifyRunButton.Click += CertifyRun_Click;
@@ -159,7 +164,7 @@ public partial class MainWindow : Window
         var conn = LiveConn.Text?.Trim();
         var slug = LiveSlug.Text?.Trim();
         var sql = LiveSql.Text;
-        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? "planalyzer.db" : LiveHistoryDb.Text!.Trim();
+        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? DefaultHistoryConn : LiveHistoryDb.Text!.Trim();
 
         if (string.IsNullOrWhiteSpace(conn) || string.IsNullOrWhiteSpace(slug) || string.IsNullOrWhiteSpace(sql))
         {
@@ -196,7 +201,7 @@ public partial class MainWindow : Window
     private void RefreshHistory()
     {
         var slug = LiveSlug.Text?.Trim();
-        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? "planalyzer.db" : LiveHistoryDb.Text!.Trim();
+        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? DefaultHistoryConn : LiveHistoryDb.Text!.Trim();
         if (string.IsNullOrWhiteSpace(slug)) return;
         try
         {
@@ -220,7 +225,7 @@ public partial class MainWindow : Window
     {
         if (LiveHistoryGrid.SelectedItem is not QueryRevision rev) return;
         var slug = LiveSlug.Text?.Trim();
-        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? "planalyzer.db" : LiveHistoryDb.Text!.Trim();
+        var dbPath = string.IsNullOrWhiteSpace(LiveHistoryDb.Text) ? DefaultHistoryConn : LiveHistoryDb.Text!.Trim();
         if (string.IsNullOrWhiteSpace(slug)) return;
         try
         {

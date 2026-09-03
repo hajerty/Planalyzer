@@ -58,20 +58,21 @@ Response:
   "sql": "...",
   "note": "v3",
   "mode": "actual",
-  "historyDbPath": "planalyzer.db"
+  "historyConnectionString": "Host=historydb;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026"
 }
 ```
 
 Response include validation report + plan analysis + revision saved.
 
-### `GET /api/history/{slug}?historyDbPath=planalyzer.db`
+### `GET /api/history/{slug}?historyConnectionString=Host=...;Database=planalyzer;...`
 
-Lista revisioni.
+Lista revisioni. Se `historyConnectionString` è omesso viene usata la variabile
+d'ambiente `PLANALYZER_HISTORY_CONN`.
 
 ### `POST /api/rollback`
 
 ```json
-{ "slug": "...", "to": 3, "historyDbPath": "planalyzer.db" }
+{ "slug": "...", "to": 3, "historyConnectionString": "Host=historydb;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026" }
 ```
 
 ## Errori

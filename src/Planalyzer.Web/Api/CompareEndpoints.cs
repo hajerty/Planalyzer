@@ -28,6 +28,13 @@ public static class CompareEndpoints
                 });
             }
             catch (Exception ex) { return Results.BadRequest(new { error = ex.Message }); }
+        })
+        .WithName("PostCompare")
+        .WithOpenApi(o =>
+        {
+            o.Summary = "Confronta piano stimato vs reale";
+            o.Description = "Confronta shape, operatori e cardinalità tra un piano estimated e un actual per evidenziare regressioni e mismatch.";
+            return o;
         });
     }
 }

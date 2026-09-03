@@ -7,6 +7,7 @@
   "containerEnv": {
     "MSSQL_SA_PASSWORD": "Planalyzer_Dev_2026!",
     "PLANALYZER_DEMO_CONN": "Server=db,1433;Database=PlanalyzerDemo;User Id=sa;Password=Planalyzer_Dev_2026!;TrustServerCertificate=True;Encrypt=False",
+    "PLANALYZER_HISTORY_CONN": "Host=historydb;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026",
     "DOTNET_NOLOGO": "1",
     "DOTNET_CLI_TELEMETRY_OPTOUT": "1"
   },

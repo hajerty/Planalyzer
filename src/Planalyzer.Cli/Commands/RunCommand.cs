@@ -10,8 +10,10 @@ public static class RunCommand
     public static Command Build()
     {
         var connOpt = new Option<string>("--conn", "Connection string SQL Server.") { IsRequired = true };
-        var historyOpt = new Option<string>("--history", () => "planalyzer.db",
-            "Percorso del file SQLite che memorizza la cronologia.");
+        var historyOpt = new Option<string>("--history",
+            () => Environment.GetEnvironmentVariable("PLANALYZER_HISTORY_CONN")
+                  ?? "Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026",
+            "Connection string Postgres per l'history (default: env PLANALYZER_HISTORY_CONN o localhost).");
         var slugOpt = new Option<string>("--slug", "Identificativo logico della query (la stessa per tutte le sue revisioni).") { IsRequired = true };
         var sqlOpt = new Option<string?>("--sql", "Testo SQL inline.");
         var sqlFileOpt = new Option<FileInfo?>("--sql-file", "File con il testo SQL.");
@@ -62,7 +64,7 @@ public static class RunCommand
             var wb = new QueryWorkbench(conn, history);
             var rev = await wb.TryRunAsync(slug, sql, note, mode, timeout, ctx.GetCancellationToken());
 
-            Console.WriteLine($"Revision #{rev.RevisionNo} salvata in {wb.HistoryPath}");
+            Console.WriteLine($"Revision #{rev.RevisionNo} salvata in {wb.HistoryConnectionString}");
             Console.WriteLine($"  duration={rev.DurationMs}ms cpu={rev.CpuMs}ms logical={rev.LogicalReads} physical={rev.PhysicalReads} rows={rev.RowCount}");
             if (!string.IsNullOrEmpty(rev.Error)) Console.Error.WriteLine($"  ERROR: {rev.Error}");
 

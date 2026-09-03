@@ -1,9 +1,11 @@
 # Devcontainer per GitHub Codespaces (o VS Code Dev Containers).
-# Due servizi:
-#   - app: container .NET 8 SDK (è qui che vivi/sviluppi)
-#   - db:  SQL Server 2022 Developer Edition (sidecar per test live)
+# Tre servizi:
+#   - app:       container .NET 8 SDK (è qui che vivi/sviluppi)
+#   - db:        SQL Server 2022 Developer Edition (sidecar per test live)
+#   - historydb: PostgreSQL 16 (storage della cronologia revisioni Planalyzer)
 #
-# Dal container `app` il database è raggiungibile con hostname `db` su 1433.
+# Dal container `app` il database SQL Server è raggiungibile su `db:1433`,
+# mentre l'history Postgres è raggiungibile su `historydb:5432`.
 services:
   app:
     image: mcr.microsoft.com/devcontainers/dotnet:1-8.0
@@ -12,6 +14,7 @@ services:
     command: sleep infinity
     depends_on:
       - db
+      - historydb
     networks:
       - planalyzer-net
 
@@ -29,6 +32,16 @@ services:
       interval: 10s
       retries: 20
       start_period: 30s
+
+  historydb:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: "planalyzer"
+      POSTGRES_PASSWORD: "planalyzer_dev_2026"
+      POSTGRES_DB: "planalyzer"
+    restart: unless-stopped
+    networks:
+      - planalyzer-net
 
 networks:
   planalyzer-net:

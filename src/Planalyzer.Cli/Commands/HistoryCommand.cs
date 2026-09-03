@@ -7,14 +7,17 @@ public static class HistoryCommand
 {
     public static Command Build()
     {
-        var historyOpt = new Option<string>("--history", () => "planalyzer.db", "Path del DB di history.");
+        var historyOpt = new Option<string>("--history",
+            () => Environment.GetEnvironmentVariable("PLANALYZER_HISTORY_CONN")
+                  ?? "Host=localhost;Port=5432;Database=planalyzer;Username=planalyzer;Password=planalyzer_dev_2026",
+            "Connection string Postgres per l'history.");
         var slugOpt = new Option<string?>("--slug", "Slug della query (se omesso, lista tutti gli slug).");
 
         var cmd = new Command("history", "Mostra la cronologia delle revisioni di una query.")
         { historyOpt, slugOpt };
         cmd.SetHandler((history, slug) =>
         {
-            var wb = new QueryWorkbench(connectionString: "Server=.", historyDbPath: history);
+            var wb = new QueryWorkbench(connectionString: "Server=.", historyConnectionString: history);
             try
             {
                 if (string.IsNullOrEmpty(slug))
